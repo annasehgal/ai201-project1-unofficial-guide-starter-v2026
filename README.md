@@ -21,11 +21,7 @@ Anna Sehgal, Corpus: City Guides
 
 ## What This Does
 
-<!-- Three or four sentences. Which corpus you picked, and the kinds of
-     questions your system answers. Write it for someone who has never seen
-     this repo.
-
-     Milestone 5. -->
+This project is a retrieval augmented system that lets users ask questions about travel, eating, and places to visit from the `city_guides` corpus. The system processes 14 city and regional guides, divides them into topic-based chunks with a heading for each topic, and uses embeddings to find the chunks that are relevant to the question asked. A relevance cutoff helps prevent the system from answering out-of-scope questions that are not covered in the corpus through a refusal. It only answers questions based on the information present in the selected corpus, which is picked in `config.py`, with test questions in `questions.py` related to the selected corpus. It uses chunks of up to 500 characters with no overlap and gives a short response based on the retrieved information, including the source document so the user knows where the information came from.
 
 ## Chunking Strategy
 
@@ -34,6 +30,7 @@ Anna Sehgal, Corpus: City Guides
 
 I chose 500 characters because my city guides contain distinct labeled sections covering specific topics. Each section in the documents contains about 450 words, so 500 characters felt like a reasonable size to capture enough context for a chunk to answer a question while keeping different topics from being combined into one large chunk. I chose 0 overlap because the guides are already organized into topic-based sections, so repeating text between chunks is not necessary.
 
+## Sample Chunks
 
 **Chunk 1** — source: `guide_accessibility.md#0 ` — produced by: `chunker.py::split_documents`
 
@@ -112,23 +109,11 @@ The in-corpus questions had best distances from 0.1775 to 0.4405. The out-of-cor
 
 ## How I Used AI
 
-<!-- Two specific moments. For each: what you asked for, what came back, and
-     what you changed about it.
 
-     "I asked Claude to write the chunking function from my notes. It ignored
-     the overlap, so I added that myself" is the level of detail we're after.
-     "I used AI to help me code" is not.
+**1.** During Milestone 3, I used AI to help develop my custom chunker for the city guides. My first version produced 119 chunks, and one of the sample chunks only contained the sentence “The Kestrelford Saturday market builds back to full size through April.” without the heading for that topic. I changed the chunking logic so that headings stay with the content they introduce when a section needs to be split. The final version produced 115 chunks.
 
-     Milestone 5. -->
+**2.** During Milestone 4, I used AI to help evaluate whether my retrieval settings needed to be changed. I tested my 5 in-scope and 5 out-of-scope questions and compared their best embedding distances. The in-scope questions ranged from 0.1775 to 0.4405, while the out-of-scope questions ranged from 0.8026 to 0.9747. After reviewing the gap between the two groups, I decided that the existing 0.6 relevance cutoff was working well enough, so I did not change it.
 
-**1.**
-
-**2.**
-
-<!-- ── Stretch features ─────────────────────────────────────────────────────
-     Doing one? Say so here BEFORE you start. A feature this README never
-     claims earns nothing.
-     ───────────────────────────────────────────────────────────────────────── -->
 
 ---
 
