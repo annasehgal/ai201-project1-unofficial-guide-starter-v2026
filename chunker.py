@@ -97,7 +97,95 @@ def split_documents(documents: list[Document]) -> list[Chunk]:
       - Would splitting on paragraph breaks keep more thoughts intact than
         splitting on a character count?
     """
-    return fallback_split(documents)
+    chunks: list[Chunk] = []
+
+    for doc in documents:
+        raw_sections = [
+            section.strip()
+            for section in doc.text.split("\n\n")
+            if section.strip()
+        ]
+
+        sections: list[str] = []
+        section_index = 0
+
+        while section_index < len(raw_sections):
+            section = raw_sections[section_index]
+
+            if section.startswith("#"):
+                while (
+                    section_index + 1 < len(raw_sections)
+                    and raw_sections[section_index + 1].startswith("#")
+                ):
+                    section += "\n\n" + raw_sections[section_index + 1]
+                    section_index += 1
+
+                if section_index + 1 < len(raw_sections):
+                    section += "\n\n" + raw_sections[section_index + 1]
+                    section_index += 1
+
+            sections.append(section)
+            section_index += 1
+
+        index = 0
+
+        for section in sections:
+            if len(section) <= 500:
+                pieces = [section]
+            else:
+                lines = section.split("\n\n")
+                heading = ""
+                body = section
+
+                if lines and lines[0].startswith("#"):
+                    heading = lines[0]
+                    body = "\n\n".join(lines[1:])
+
+                sentences = [
+                    sentence.strip()
+                    for sentence in body.split(". ")
+                    if sentence.strip()
+                ]
+
+                pieces = []
+                buffer = ""
+
+                for sentence in sentences:
+                    if not sentence.endswith("."):
+                        sentence += "."
+
+                    candidate = (
+                        sentence
+                        if not buffer
+                        else buffer + " " + sentence
+                    )
+
+                    if buffer and len(candidate) > 500:
+                        pieces.append(
+                            f"{heading}\n\n{buffer}" if heading else buffer
+                        )
+                        buffer = sentence
+                    else:
+                        buffer = candidate
+
+                if buffer:
+                    pieces.append(
+                        f"{heading}\n\n{buffer}" if heading else buffer
+                    )
+
+            for piece in pieces:
+                chunks.append(
+                    Chunk(
+                        text=piece,
+                        source=doc.source,
+                        index=index,
+                        produced_by="chunker.py::split_documents",
+                    )
+                )
+                index += 1
+
+    return chunks
+
 
 
 def describe(chunks: list[Chunk]) -> str:
