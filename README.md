@@ -84,26 +84,31 @@ Brightwater goes quiet to the point of dullness with the university empty.
      visible. Milestone 4. -->
 
 **Question:**
+Where can visitors eat in Corry Vale?
 
 **Answer:**
 
 ```
+Visitors in Corry Vale can buy bread and cheese from the farm shop at the valley mouth (guide_eating.md).
 ```
 
 **My relevance cutoff:**
-
-<!-- The number you set in config.py, and how you got there.
-
-     You ran five questions your corpus covers and the five in OUT_OF_SCOPE
-     that it clearly doesn't, and wrote down the best distance for each. What
-     did those two groups look like? Where was the gap? Put the actual numbers
-     here — the table below wants all ten rows.
-
-     Milestone 4. -->
+0.6
 
 | Question | In corpus? | Best distance |
-|---|---|---|
-|  |  |  |
+|---|---|---:|
+| Where can visitors eat in Corry Vale? | Yes | 0.4026 |
+| Is September a good month to visit Brightwater? | Yes | 0.2532 |
+| How long does the coastal path from Halden Bay to the lighthouse take? | Yes | 0.1775 |
+| How accessible is Kestrelford for walking? | Yes | 0.3960 |
+| How is the mobile coverage in Halden Bay? | Yes | 0.4405 |
+| What is the capital of Mongolia? | No | 0.8026 |
+| How do I change the oil in a diesel engine? | No | 0.8917 |
+| Who won the 1994 World Cup? | No | 0.9747 |
+| What is the recommended dosage of ibuprofen for a headache? | No | 0.8486 |
+| How do I write a for loop in Rust? | No | 0.8130 |
+
+The in-corpus questions had best distances from 0.1775 to 0.4405. The out-of-corpus questions had best distances from 0.8026 to 0.9747. There was a gap between 0.4405 and 0.8026, so I kept the cutoff at 0.6 because it falls within that gap and separates the two groups.
 
 ## How I Used AI
 
