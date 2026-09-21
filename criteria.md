@@ -23,18 +23,15 @@ For at least 4 of my 5 test questions, the retrieved chunks include one that
 contains the answer.
 
 **Why this target:**
-<!-- e.g. "One of my questions is about a topic only two documents mention, so
-     I expect that one to be hard." -->
+One of my questions asks about eating in Corry Vale, and that information is specifically present in the Corry Vale guide only. I expect most questions to retrieve the relevant guide, but I chose 4 of 5 because one question may  be harder if the information is less directly stated.
 
 ---
 
-## 2. Every answer names a source
 
 Every answer the system produces names at least one source document.
 
 **Why this target:**
-<!-- Why all five and not four? What about your setup makes that achievable —
-     or what would have to go wrong for it not to be? -->
+I chose all five because each of my questions asks about information covered in a specific city guide, so the system should have a source document to cite for every answer. This could fail if the system generates an answer without including a source or retrieves information from a different guide, but I expect the source requirement in the pipeline to make this achievable.
 
 ---
 
@@ -44,53 +41,27 @@ When I ask a question my documents clearly don't cover, the relevance gate
 stops it and the system returns "I don't have enough information about that" —
 in at least 4 of 5 tries.
 
-<!-- The five questions are the ones in `OUT_OF_SCOPE` at the bottom of
-     `questions.py`, and `run_eval.py` puts them through the gate and writes
-     what happened into your run log. Swap them for your own if you'd rather —
-     just keep five of them, or the "4 of 5" above has nothing to be 4 of. -->
-
 **Why this target:**
-<!-- What did your distances look like when you set the cutoff in Milestone 4?
-     Was there a clean gap, or did the two groups overlap? -->
+I chose 4 of 5 because these questions are fully out of scope from the corpus related to city guide, so it should return "I don't have enough information about that" and reject at least 4 of these questions. One of the tests could fail due to word overlap leading to out-of-scope question to pass the relevance cutoff.
 
 ---
 
 ## 4. Something about your chunks
 
-<!-- YOU WRITE THIS ONE.
-
-     How would you know if your chunks were the right size? Name something
-     countable or observable.
-
-     Examples of the right shape — don't copy these, they should come from
-     what you actually saw in Milestone 3:
-       - "At least 4 of 5 sampled chunks read as a complete thought, with no
-          sentence cut in half at either end."
-       - "No chunk is shorter than 200 characters, since anything below that
-          in my corpus turned out to be a heading with no content under it." -->
-
-
-
+At least 4 of 5 sampled chunks contain complete information about a specific topic without cutting off the relevant information.
+       
 **Why this target:**
-
+The city guides are organized into sections covering specific topics such as eating, getting around, and places to see. I want most chunks to preserve a complete piece of information from one of these topics so the information can be understood when retrieved.
 
 
 ---
 
 ## 5. Your choice
 
-<!-- YOU WRITE THIS ONE TOO.
-
-     Pick something you actually care about getting right. It could be about
-     speed, about refusals, about a particular kind of question your corpus
-     handles badly, about source attribution being correct rather than merely
-     present — anything, as long as it names a number or an observable
-     outcome. -->
-
-
+For at least 4 of 5 ambiguous questions that do not specify a city, the answer identifies which city the information refers to. 
 
 **Why this target:**
-
+I picked 4 of 5 because most guides contain information about similar topics, such as food and transportation, so the answer should make it clear which city the information comes from. I chose 4 instead of 5 because questions without a specified city can be ambiguous, so one answer may not clearly identify the city.
 
 
 ---
