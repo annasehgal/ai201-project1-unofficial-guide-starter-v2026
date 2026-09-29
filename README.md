@@ -134,18 +134,70 @@ The in-corpus questions had best distances from 0.1775 to 0.4405. The out-of-cor
      the same number goes in all three run columns. That's correct, not lazy.
 
      Milestone 1. -->
+## Run Log — Before
+
+- Produced by: `run_eval.py::main`
+- Retrieval: `store.py::search`, chunks from `chunker.py::split_documents`
+- Corpus: `city_guides` (index variant `default`)
+- top-k: 5 · relevance cutoff: 0.6
+- Runs per question: 3, caching off
+- Source run file: `results/run_2026-09-29_1145_before.md`
 
 | Criterion | Target | Run 1 | Run 2 | Run 3 | Verdict |
 |---|---|---|---|---|---|
-| 1. Retrieved chunk contains the answer | 4 of 5 |  |  |  |  |
-| 2. Every answer names a source | 5 of 5 |  |  |  |  |
-| 3. Gate stops out-of-corpus questions | 4 of 5 |  |  |  |  |
-| 4. | | | | | |
-| 5. | | | | | |
+| 1. Retrieved chunk contains the answer | 4 of 5 | 2/5 | 2/5 | 2/5 | MISSED |
+| 2. Every answer names a source | 5 of 5 | 5/5 | 4/5 | 5/5 | MET |
+| 3. Gate stops out-of-corpus questions | 4 of 5 | 5/5 | 5/5 | 5/5 | MET |
+| 4. Chunks contain complete information | 4 of 5 | 5/5 | 5/5 | 5/5 | MET |
+| 5. Ambiguous questions identify the city | 4 of 5 | 5/5 | 5/5 | 5/5 | MET |
 
 <!-- Underneath, paste the REAL output for each criterion from one of your
      runs — the actual text your system produced, not a description of it.
      Name the file and function that produced it. -->
+
+## Real Output Samples (from Run 1)
+
+Source run file: `results/run_2026-09-29_1145_before.md`
+
+## Real Output Samples (from Run 1)
+
+Source run file: `results/run_2026-09-29_1145_before.md`
+
+**Criterion 1: Retrieved chunk contains the answer**
+
+- Produced by: `run_eval.py::main`
+- Question: *"Where can visitors eat in Corry Vale?"*
+- Result: `fail`
+- Sources retrieved: `guide_accessibility.md`, `guide_corry_vale.md`, `guide_eating.md`, `guide_kestrelford.md`, `guide_walking.md`
+- System output: In Corry Vale, there is a farm shop at the valley mouth that sells bread and cheese (`guide_eating.md`).
+
+**Criterion 2: Every answer names a source**
+
+- Produced by: `run_eval.py::main`
+- Question: *"Is September a good month to visit Brightwater?"*
+- Result: `pass`
+- System output: Yes, September is described as a "sweet spot" that is warm, quiet, and has everything still open, though accommodation becomes hard to find and expensive from late September as the term starts (`guide_seasons.md`).
+
+**Criterion 3: Gate stops out-of-corpus questions**
+
+- Produced by: `run_eval.py::check_out_of_scope`
+- Relevance cutoff: `0.60`
+- Result: `5 of 5` questions refused by the gate.
+- Example: *"What is the capital of Mongolia?"* → Best distance: `0.803` → refused.
+
+**Criterion 4: Chunks contain complete information**
+
+- Produced by: `run_eval.py::main`
+- Question: *"How long does the coastal path from Halden Bay to the lighthouse take?"*
+- Sources retrieved: `guide_halden_bay.md`, `guide_pellew_sands.md`, `guide_regional_transport.md`, `guide_walking.md`
+- System output: The coastal path from Halden Bay to the lighthouse takes about two hours (Source: `guide_walking.md` and `guide_halden_bay.md`).
+
+**Criterion 5: Ambiguous questions identify the city**
+
+- Produced by: `run_eval.py::main`
+- Question: *"How accessible is Kestrelford for walking?"*
+- Sources retrieved: `guide_accessibility.md`, `guide_elder_ness.md`, `guide_kestrelford.md`, `guide_regional_transport.md`, `guide_walking.md`
+- System output: Kestrelford is built on a slope, and the walk up from the lower car park is steeper than it looks on a map (`guide_accessibility.md`). Additionally, the street plan has not meaningfully changed since the 1200s, which is charming on foot (`guide_kestrelford.md`).
 
 ## Verdicts
 
