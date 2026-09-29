@@ -301,9 +301,17 @@ Yes. The improvement helped Criterion 2. Before the change, source citation was 
 
      Milestone 5. -->
 
+Criterion 1 is still marked MISSED after the improvement, with results of 2/5 in all three After runs. However, the current scorer checks whether the expected phrase appears in the generated answer rather than directly checking the retrieved chunks, so this result does not by itself prove that retrieval failed. Next, I would change the measurement so that the retrieved chunks are checked directly, then determine whether the remaining issue is retrieval or generation. I stopped here because Milestone 4 required only one system improvement, and that improvement was used to address the source citation problem in Criterion 2.
+
 ## What I'd Do Differently
 
 <!-- Knowing what you know now — which of your five criteria would you write
      differently, and why?
 
      Milestone 5. -->
+
+I would write Criterion 1 more directly around something I can measure from the retrieved chunks instead of relying on an expected phrase in the generated answer. I would also write Criterion 5 with test questions that do not already name the city, so the ambiguity requirement is actually being tested.
+
+## How I Used AI
+
+I used AI to help interpret the assignment instructions, inspect patterns in the evaluation results, and organize my diagnoses and README. I verified the actual test outputs, made the final decisions about the criteria, and made the system change based on the diagnosis.
