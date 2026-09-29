@@ -212,11 +212,11 @@ Source run file: `results/run_2026-09-29_1145_before.md`
 
 | # | Criterion | Verdict | How I decided |
 |---|---|---|---|
-| 1 |  |  |  |
-| 2 |  |  |  |
-| 3 |  |  |  |
-| 4 |  |  |  |
-| 5 |  |  |  |
+| 1 | Retrieved chunks contain the answer | MISSED | Across all three runs, only 2 of 5 questions passed the answer check, missing the 4 of 5 target. |
+| 2 | Every answer names a source | MISSED | Runs 1 and 3 had 5 of 5, but Run 2 had 4 of 5, so the 5 of 5 target did not hold across all three runs. |
+| 3 | Gate stops out-of-corpus questions | MET | The gate refused 5 of 5 out-of-corpus questions in every run, exceeding the 4 of 5 target. |
+| 4 | Chunks contain complete information | MET | The sampled results showed 5 of 5 complete chunks, meeting the 4 of 5 target. |
+| 5 | Ambiguous questions identify the city | MET | All 5 of 5 responses identified the relevant city, meeting the 4 of 5 target. |
 
 ## Diagnoses
 
