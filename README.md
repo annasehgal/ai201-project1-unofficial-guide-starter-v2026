@@ -237,6 +237,18 @@ Source run file: `results/run_2026-09-29_1145_before.md`
      low, and which one you'd tighten and to what.
 
      Milestone 3. -->
+     
+### Missed Criterion: Criterion 1 (Retrieved chunks contain the answer)
+
+- **Pipeline Stage:** Measurement / scoring
+- **Mechanism:**
+  The criterion is supposed to measure whether the retrieved chunks contain the answer, but `scorer.py::judge` checks whether the expected phrase appears in the generated answer instead of inspecting the retrieved chunks. For example, the Corry Vale answer was marked as a fail because it did not contain the exact word "pub", even though `guide_corry_vale.md` contains the relevant pub information. The Kestrelford result was similarly marked as a fail because the generated answer described accessibility without using the exact word "accessible". This means the 2 of 5 result is not reliable evidence that retrieval failed.
+
+### Missed Criterion: Criterion 2 (Every answer names a source)
+
+- **Pipeline Stage:** Generation (`generate.py::answer_from_chunks`)
+- **Mechanism:**
+  The generation prompt instructs the model to name the source document, but the model did not consistently follow that instruction. In Run 2, the mobile-coverage response answered the question but omitted a source name, producing 4 of 5 source-citing answers instead of the required 5 of 5. The same question had source citations in Runs 1 and 3, showing that the problem was inconsistent generation rather than missing retrieved sources.
 
 ## The Improvement
 
