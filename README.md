@@ -237,7 +237,7 @@ Source run file: `results/run_2026-09-29_1145_before.md`
      low, and which one you'd tighten and to what.
 
      Milestone 3. -->
-     
+
 ### Missed Criterion: Criterion 1 (Retrieved chunks contain the answer)
 
 - **Pipeline Stage:** Measurement / scoring
@@ -253,8 +253,10 @@ Source run file: `results/run_2026-09-29_1145_before.md`
 ## The Improvement
 
 **What I changed:**
+I tightened the grounding prompt in generate.py so that every generated answer must include a source filename and end with a source citation.
 
 **Why I picked it:**
+I chose this improvement because Criterion 2 was missed when one generated response omitted its source citation in Run 2.
 
 <!-- Connect it to a specific diagnosis above in one sentence. If you can't,
      you picked a fix because it sounded impressive. -->
@@ -264,13 +266,20 @@ Source run file: `results/run_2026-09-29_1145_before.md`
 <!-- Same format, same five criteria, three runs each.
      `python run_eval.py --label after` -->
 
-| Criterion | Target | Run 1 | Run 2 | Run 3 | Verdict |
+- Produced by: `run_eval.py::main`
+- Retrieval: `store.py::search`, chunks from `chunker.py::split_documents`
+- Corpus: `city_guides` (index variant `default`)
+- top-k: 5 · relevance cutoff: 0.6
+- Runs per question: 3, caching off
+- Source run file: `results/run_2026-09-29_1227_after.md`
+
+| **Criterion** | **Target** | **Run 1** | **Run 2** | **Run 3** | **Verdict** |
 |---|---|---|---|---|---|
-| 1. Retrieved chunk contains the answer | 4 of 5 |  |  |  |  |
-| 2. Every answer names a source | 5 of 5 |  |  |  |  |
-| 3. Gate stops out-of-corpus questions | 4 of 5 |  |  |  |  |
-| 4. | | | | | |
-| 5. | | | | | |
+| 1. Retrieved chunk contains the answer | 4 of 5 | 2/5 | 2/5 | 2/5 | MISSED |
+| 2. Every answer names a source | 5 of 5 | 5/5 | 5/5 | 5/5 | MET |
+| 3. Gate stops out-of-corpus questions | 4 of 5 | 5/5 | 5/5 | 5/5 | MET |
+| 4. Chunks contain complete information | 4 of 5 | 5/5 | 5/5 | 5/5 | MET |
+| 5. Ambiguous questions identify the city | 4 of 5 | 5/5 | 5/5 | 5/5 | MET |
 
 **Did it help?**
 
@@ -280,6 +289,7 @@ Source run file: `results/run_2026-09-29_1145_before.md`
      tell.
 
      Milestone 4. -->
+Yes. The improvement helped Criterion 2. Before the change, source citation was 5/5, 4/5, and 5/5 across the three runs. After tightening the grounding prompt, source citation was 5/5 in all three runs.
 
 ## What's Still Broken
 
