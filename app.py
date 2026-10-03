@@ -32,7 +32,7 @@ def cmd_corpora(args):
 
 def cmd_index(args):
     from ingest import load_documents, describe as describe_docs
-    from chunker import split_documents, describe as describe_chunks
+    from chunker import split_documents, split_documents_titled, describe as describe_chunks
     from store import build_index
 
     corpus = args.corpus or config.CORPUS
@@ -43,7 +43,11 @@ def cmd_index(args):
     documents = load_documents(corpus)
     print(f"  loaded   {describe_docs(documents)}")
 
-    chunks = split_documents(documents)
+    # Unit 2 stretch: the "titled" variant uses the title-prefixed chunker.
+    if args.variant == "titled":
+        chunks = split_documents_titled(documents)
+    else:
+        chunks = split_documents(documents)
     print(f"  chunked  {describe_chunks(chunks)}")
 
     print(f"  embedding {len(chunks)} chunks (first run downloads the model)...")

@@ -187,6 +187,39 @@ def split_documents(documents: list[Document]) -> list[Chunk]:
     return chunks
 
 
+def split_documents_titled(documents: list[Document]) -> list[Chunk]:
+    """
+    Unit 2 stretch: the same chunks as `split_documents`, each prefixed with
+    its guide's title (the document's first "# " heading).
+
+    Chunks like "## Eat and drink" or a boilerplate "Practical notes" paragraph
+    never name their town, so a question that names the town can't pull them
+    up. Prefixing the title puts the town name into every chunk's embedding.
+    """
+    titles = {}
+    for doc in documents:
+        first = next(
+            (line for line in doc.text.splitlines() if line.startswith("# ")), ""
+        )
+        titles[doc.source] = first[2:].strip()
+
+    titled: list[Chunk] = []
+    for chunk in split_documents(documents):
+        title = titles.get(chunk.source, "")
+        text = chunk.text
+        if title and not text.startswith(f"# {title}"):
+            text = f"{title}\n\n{text}"
+        titled.append(
+            Chunk(
+                text=text,
+                source=chunk.source,
+                index=chunk.index,
+                produced_by="chunker.py::split_documents_titled",
+            )
+        )
+
+    return titled
+
 
 def describe(chunks: list[Chunk]) -> str:
     """A one-line summary, printed after indexing."""
