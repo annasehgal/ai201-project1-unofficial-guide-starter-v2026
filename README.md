@@ -123,6 +123,8 @@ The in-corpus questions had best distances from 0.1775 to 0.4405. The out-of-cor
      unit 1 — the point is that someone can see what you said before you knew
      how it went. -->
 
+**Stretch (declared before starting it):** I am adding a second improvement from the Milestone 4 menu: a second chunking strategy that prefixes every chunk with its guide's title (for example `Corry Vale`). It targets the Criterion 1 retrieval misses diagnosed below, where the chunk holding the answer never names its town. It will be indexed as a separate variant (`--variant titled`) and measured the same way: all five criteria, three runs each, compared against the Run Log — After.
+
 ## Run Log — Before
 
 <!-- Your five criteria, three runs each. `python run_eval.py --label before`
