@@ -299,6 +299,58 @@ I chose this improvement because Criterion 2 was missed when one generated respo
      Milestone 4. -->
 Yes. The improvement helped Criterion 2. Before the change, source citation was 5/5, 4/5, and 5/5 across the three runs. After tightening the grounding prompt, source citation was 5/5 in all three runs.
 
+## Second Improvement (Stretch): Title-Prefixed Chunking
+
+**What I changed:**
+I added `chunker.py::split_documents_titled`. It produces the same chunks as `split_documents`, but each one starts with its guide's title (the document's first `# ` heading), for example `Corry Vale`. `app.py index` uses it when the variant is `titled`, so the original index (`default`) is unchanged and both can be queried. Built with `python app.py --variant titled index`; measured with `python run_eval.py --label after_titled --variant titled`. Nothing else changed: same corpus, same embedding model, same top-k (5), same cutoff (0.6), and the same grounding prompt as the first improvement.
+
+**Why I picked it:**
+The Criterion 1 diagnosis showed that both real retrieval misses had the same cause: the chunk holding the answer never names its town, so the town in the question can't pull it into the top 5.
+
+**Retrieval before and after** (`store.py::search`, top-k widened to 40 to see the rank):
+
+| Question | Answer chunk | Rank (default) | Rank (titled) |
+|---|---|---|---|
+| Where can visitors eat in Corry Vale? | `guide_corry_vale.md#3` | 6 (0.5025) | 1 (0.2406) |
+| How is the mobile coverage in Halden Bay? | `guide_halden_bay.md#7` | 18 (0.5866) | 5 (0.4777) |
+
+### Run Log — After (Second Improvement)
+
+- Produced by: `run_eval.py::main`
+- Retrieval: `store.py::search`, chunks from `chunker.py::split_documents_titled`. The run file's header says `chunker.py::split_documents` because that line is hardcoded in `run_eval.py`; the retrieved chunks themselves carry `produced_by: chunker.py::split_documents_titled`.
+- Corpus: `city_guides` (index variant `titled`)
+- top-k: 5 · relevance cutoff: 0.6
+- Runs per question: 3, caching off
+- Source run file: `results/run_2026-10-02_2119_after_titled.md`
+
+| **Criterion** | **Target** | **Run 1** | **Run 2** | **Run 3** | **Verdict** |
+|---|---|---|---|---|---|
+| 1. Retrieved chunk contains the answer | 4 of 5 | 4/5 | 4/5 | 4/5 | MET |
+| 2. Every answer names a source | 5 of 5 | 5/5 | 5/5 | 5/5 | MET |
+| 3. Gate stops out-of-corpus questions | 4 of 5 | 5/5 | 5/5 | 5/5 | MET |
+| 4. Chunks contain complete information | 4 of 5 | 5/5 | 5/5 | 5/5 | MET |
+| 5. Ambiguous questions identify the city | 4 of 5 | 4/5 | 5/5 | 4/5 | MET |
+
+How each row was counted:
+- **Criterion 1:** the pass/fail column in the run file. Corry Vale and mobile coverage now pass in all three runs. Kestrelford still fails because the scorer looks for the exact word "accessible" in the answer (see Diagnoses).
+- **Criterion 2:** all 15 answers end with a `Source:` line naming a guide file.
+- **Criterion 3:** the run file's gate section: 5 of 5 refused (best distances 0.803 to 0.975). It is the same in all three columns because the gate check runs once.
+- **Criterion 4:** I read the top retrieved chunk for each of the five questions. All five are complete sections with their heading. The chunk bodies are identical to `split_documents`; only the title line is added. Retrieval is deterministic, so it is the same in all three runs.
+- **Criterion 5:** whether the answer text names the city. In Runs 1 and 3, the Brightwater answer says "the town" without naming Brightwater, so those runs are 4/5. This is a stricter reading than I used in the earlier tables: by this reading, Run 2 of the first Run Log — After would also have been 4/5. Either way the 4-of-5 target holds.
+
+**Real output** (Run 1, `run_eval.py::main`):
+
+> **Q:** Where can visitors eat in Corry Vale?
+> Visitors in Corry Vale can eat at the two pubs (one in the largest village serving food seven days a week, and a second in the third village opening Thursday to Sunday) or buy limited supplies like bread and cheese at the farm shop located at the valley mouth.
+> Source: `guide_corry_vale.md`
+
+> **Q:** How is the mobile coverage in Halden Bay?
+> Mobile coverage in Halden Bay is good in the centre and patchy on the outskirts.
+> Source: `guide_halden_bay.md`
+
+**Did it help?**
+Yes. Criterion 1 went from 2/5, 2/5, 2/5 (first Run Log — After) to 4/5, 4/5, 4/5, which moves it from MISSED to MET. Both questions the diagnosis traced to retrieval now pass in every run: the Corry Vale answer now mentions the pubs, and the Halden Bay answer now gives the coverage instead of saying there is no information. Criteria 2, 3 and 4 did not change. Criterion 5's 4/5 runs come from the stricter way I counted it here, not from the change: the first Run Log — After has the same Brightwater wording ("the town") in Run 2. The gate still refuses all five out-of-scope questions, even though the in-scope best distances dropped (Corry Vale went from 0.4026 to 0.2406), so the extra title line did not push unrelated questions under the cutoff.
+
 ## What's Still Broken
 
 <!-- For each criterion still missed after your fix: what you'd do about it,
@@ -309,7 +361,7 @@ Yes. The improvement helped Criterion 2. Before the change, source citation was 
 
      Milestone 5. -->
 
-Criterion 1 is still marked MISSED after the improvement, with results of 2/5 in all three After runs. However, the current scorer checks whether the expected phrase appears in the generated answer rather than directly checking the retrieved chunks, so this result does not by itself prove that retrieval failed. Printing the retrieved chunks (see Diagnoses) shows that the real misses are at retrieval: the Corry Vale pub chunk ranks 6th, just outside top-k 5, and the Halden Bay coverage chunk does not name the town, so it ties with eight identical copies from other guides. Next, I would first fix `scorer.py::judge` to check the retrieved chunks, in its own commit. Then I would change the chunker to prefix each chunk with its guide's town name, so a question that names a town can find that town's chunks. I stopped here because Milestone 4 required only one system improvement, and that improvement was used to address the source citation problem in Criterion 2.
+Criterion 1 is still marked MISSED after the first improvement, with results of 2/5 in all three After runs. However, the current scorer checks whether the expected phrase appears in the generated answer rather than directly checking the retrieved chunks, so this result does not by itself prove that retrieval failed. Printing the retrieved chunks (see Diagnoses) shows that the real misses are at retrieval: the Corry Vale pub chunk ranks 6th, just outside top-k 5, and the Halden Bay coverage chunk does not name the town, so it ties with eight identical copies from other guides. I tested the chunking fix as my second improvement (see Second Improvement), and it moved Criterion 1 to 4/5 in all three runs (MET). What is left is the Kestrelford question, which fails only because `scorer.py::judge` looks for the exact word "accessible" in the generated answer. Next, I would fix the scorer to check the retrieved chunks, in its own commit, so a measurement change is not mixed up with a system change. I would also rebuild the `default` index with `split_documents_titled`, so the improvement becomes the system's normal behaviour rather than a separate variant. My required improvement went to the Criterion 2 citation problem, and the second one went to the retrieval misses. I stopped before fixing the scorer because that would change how every earlier run is scored, and it belongs in its own measured step.
 
 ## What I'd Do Differently
 
@@ -331,3 +383,5 @@ After grading, I lost 2 points because my Criterion 1 diagnosis named "Measureme
 - I rewrote the Criterion 1 diagnosis as a Retrieval miss using those ranks, and kept the scorer explanation as a separate note about measurement.
 
 What I took from this: the AI's first answer sounded confident but was not backed by evidence. Printing the chunks settled the question in a few minutes.
+
+For the stretch, I used Claude to build the title-prefixed chunker (`chunker.py::split_documents_titled`) as a separate index variant, so the original system stayed as it was, and to run the three-run evaluation. I declared the stretch in the README and committed that before any code was written. I checked the new run file myself: the rank changes, all 15 answers, and how each criterion was counted. While counting Criterion 5 strictly, I found that my earlier Criterion 5 counts were more generous than the answers support, and I noted that in the README instead of changing the old tables.
