@@ -240,15 +240,21 @@ Source run file: `results/run_2026-09-29_1145_before.md`
 
 ### Missed Criterion: Criterion 1 (Retrieved chunks contain the answer)
 
-- **Pipeline Stage:** Measurement / scoring
+- **Pipeline Stage:** Retrieval (`store.py::search`, top-k 5)
 - **Mechanism:**
-  The criterion is supposed to measure whether the retrieved chunks contain the answer, but `scorer.py::judge` checks whether the expected phrase appears in the generated answer instead of inspecting the retrieved chunks. For example, the Corry Vale answer was marked as a fail because it did not contain the exact word "pub", even though `guide_corry_vale.md` contains the relevant pub information. The Kestrelford result was similarly marked as a fail because the generated answer described accessibility without using the exact word "accessible". This means the 2 of 5 result is not reliable evidence that retrieval failed.
+  I printed the five chunks `store.py::search` returns for each failed question. The scorer marked three of the five questions as failed: Corry Vale, Kestrelford and Halden Bay mobile coverage.
+
+  - **Corry Vale (retrieval miss).** The answer is in the "Eat and drink" chunk of `guide_corry_vale.md` (`guide_corry_vale.md#3`: "One pub in the largest village serves food seven days a week"). That chunk ranks 6th (distance 0.5025), one place outside the top 5. The 5 chunks that came back were the farm-shop line from `guide_eating.md` (0.4026), the Corry Vale intro, a walking chunk, an accessibility chunk, and Kestrelford's "Eat and drink" chunk (0.4751), which is about pubs in the wrong town. The model answered from the farm-shop chunk because that is all it had about eating in Corry Vale.
+  - **Halden Bay mobile coverage (retrieval miss, caused by chunking).** `guide_halden_bay.md` does have the answer in its "Practical notes" section ("Mobile coverage is good in the centre and patchy on the outskirts"). That paragraph appears word for word in eight other guides, and the chunk does not mention Halden Bay. All nine copies embed identically (distance 0.5866), so the Halden Bay one ranks 18th. The only coverage chunk retrieved was the regional one in `guide_accessibility.md#10`, which does not name Halden Bay, so in all three runs the model said there was no information about Halden Bay specifically.
+  - **Kestrelford (no pipeline failure, scorer artifact).** The top chunk (`guide_accessibility.md#6`, under the heading "Difficult") does answer the question: the town is on a slope and the walk up is steep. The answer reported that correctly. It was marked as a fail only because `scorer.py::judge` checks whether the exact phrase "accessible" appears in the generated answer, not whether the retrieved chunks contain the answer.
+
+  **Pattern:** both real misses happen at retrieval, and both involve a chunk that has the answer but not the town's name. The Corry Vale eating chunk is headed only "Eat and drink", and the Halden Bay coverage paragraph is boilerplate shared by nine guides. So the question's town name cannot pull the right chunk into the top 5. The scorer bug sits on top of this: because it checks the generated answer, the count is not a clean measure of retrieval. Re-scored by hand against the retrieved chunks, Criterion 1 would be 3 of 5 (Kestrelford and the two that passed). That is still below the 4-of-5 target, so the MISSED verdict stands.
 
 ### Missed Criterion: Criterion 2 (Every answer names a source)
 
 - **Pipeline Stage:** Generation (`generate.py::answer_from_chunks`)
 - **Mechanism:**
-  The generation prompt instructs the model to name the source document, but the model did not consistently follow that instruction. In Run 2, the mobile-coverage response answered the question but omitted a source name, producing 4 of 5 source-citing answers instead of the required 5 of 5. The same question had source citations in Runs 1 and 3, showing that the problem was inconsistent generation rather than missing retrieved sources.
+  The generation prompt instructs the model to name the source document, but the model did not consistently follow that instruction. In Run 2, the mobile-coverage response (which said the documents had no information about Halden Bay coverage) omitted a source name, producing 4 of 5 source-citing answers instead of the required 5 of 5. The same question had source citations in Runs 1 and 3, showing that the problem was inconsistent generation rather than missing retrieved sources.
 
 ## The Improvement
 
@@ -301,7 +307,7 @@ Yes. The improvement helped Criterion 2. Before the change, source citation was 
 
      Milestone 5. -->
 
-Criterion 1 is still marked MISSED after the improvement, with results of 2/5 in all three After runs. However, the current scorer checks whether the expected phrase appears in the generated answer rather than directly checking the retrieved chunks, so this result does not by itself prove that retrieval failed. Next, I would change the measurement so that the retrieved chunks are checked directly, then determine whether the remaining issue is retrieval or generation. I stopped here because Milestone 4 required only one system improvement, and that improvement was used to address the source citation problem in Criterion 2.
+Criterion 1 is still marked MISSED after the improvement, with results of 2/5 in all three After runs. However, the current scorer checks whether the expected phrase appears in the generated answer rather than directly checking the retrieved chunks, so this result does not by itself prove that retrieval failed. Printing the retrieved chunks (see Diagnoses) shows that the real misses are at retrieval: the Corry Vale pub chunk ranks 6th, just outside top-k 5, and the Halden Bay coverage chunk does not name the town, so it ties with eight identical copies from other guides. Next, I would first fix `scorer.py::judge` to check the retrieved chunks, in its own commit. Then I would change the chunker to prefix each chunk with its guide's town name, so a question that names a town can find that town's chunks. I stopped here because Milestone 4 required only one system improvement, and that improvement was used to address the source citation problem in Criterion 2.
 
 ## What I'd Do Differently
 
@@ -315,3 +321,11 @@ I would write Criterion 1 more directly around something I can measure from the 
 ## How I Used AI
 
 I used AI to help interpret the assignment instructions, inspect patterns in the evaluation results, and organize my diagnoses and README. I verified the actual test outputs, made the final decisions about the criteria, and made the system change based on the diagnosis.
+
+After grading, I lost 2 points because my Criterion 1 diagnosis named "Measurement / scoring", which is not one of the five pipeline stages. I used Claude (Claude Code) to help me fix this:
+
+- Claude first suggested relabelling the miss as Generation and described the Corry Vale answer as a reworded version of the pub information. When I asked it to check that against the requirements, it found the claim was wrong. It had not looked at the retrieved chunks, and Milestone 3 says to print them before naming a stage.
+- It then ran `store.py::search` for each failed question, with top-k widened to 40 to see where the answer chunks actually ranked. That showed the Corry Vale pub chunk at rank 6 (just outside top-k 5) and the Halden Bay coverage chunk at rank 18, behind eight identical copies from other guides. It also showed that the Kestrelford chunk did contain the answer.
+- I rewrote the Criterion 1 diagnosis as a Retrieval miss using those ranks, and kept the scorer explanation as a separate note about measurement.
+
+What I took from this: the AI's first answer sounded confident but was not backed by evidence. Printing the chunks settled the question in a few minutes.
